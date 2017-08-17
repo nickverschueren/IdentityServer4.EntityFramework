@@ -97,22 +97,24 @@ namespace IdentityServer4.EntityFramework.Stores
             return Task.FromResult(results.Select(x => x.ToModel()).ToArray().AsEnumerable());
         }
 
-        public Task<Resources> GetAllResources()
+        public Task<Resources> GetAllResources() => GetAllResourcesAsync();
+
+        public Task<Resources> GetAllResourcesAsync()
         {
             var identity = _context.IdentityResources
-              .Include(x => x.UserClaims);
+                .Include(x => x.UserClaims);
 
             var apis = _context.ApiResources
                 .Include(x => x.Secrets)
                 .Include(x => x.Scopes)
-                    .ThenInclude(s => s.UserClaims)
+                .ThenInclude(s => s.UserClaims)
                 .Include(x => x.UserClaims);
 
             var result = new Resources(
                 identity.ToArray().Select(x => x.ToModel()).AsEnumerable(),
                 apis.ToArray().Select(x => x.ToModel()).AsEnumerable());
 
-            _logger.LogDebug("Found {scopes} as all scopes in database", result.IdentityResources.Select(x=>x.Name).Union(result.ApiResources.SelectMany(x=>x.Scopes).Select(x=>x.Name)));
+            _logger.LogDebug("Found {scopes} as all scopes in database", result.IdentityResources.Select(x => x.Name).Union(result.ApiResources.SelectMany(x => x.Scopes).Select(x => x.Name)));
 
             return Task.FromResult(result);
         }
